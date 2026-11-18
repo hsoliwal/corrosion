@@ -13,7 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -85,14 +84,14 @@ public class M3CargoBuildEvidenceTest {
     public void refusesMissingLockUnsafePathsAndCanceledOwner() throws Exception {
         Path metadata = setup();
         Files.delete(root.resolve("Cargo.lock"));
-        assertThrows(IOException.class, () -> snapshot(metadata));
+        rejects(IOException.class, () -> snapshot(metadata));
         Files.writeString(root.resolve("Cargo.lock"), "version = 4\n");
         NullProgressMonitor monitor = new NullProgressMonitor();
         monitor.setCanceled(true);
-        assertThrows(OperationCanceledException.class,
+        rejects(OperationCanceledException.class,
                 () -> M3CargoBuildEvidence.captureFromOriginalMetadata(
                         root, "cargo-fixture", "Debug", UUID, "cargo", metadata, monitor));
-        assertThrows(IllegalArgumentException.class,
+        rejects(IllegalArgumentException.class,
                 () -> new M3CargoBuildEvidence.Snapshot("cargo-fixture", UUID, "Debug",
                         "A".repeat(64), "b".repeat(64), "absent", "absent", "absent",
                         "c".repeat(64), 1, "d".repeat(64)),
@@ -102,7 +101,7 @@ public class M3CargoBuildEvidenceTest {
             Path redirect = root.resolve("rust-toolchain.toml");
             try {
                 Files.createSymbolicLink(redirect, outside);
-                assertThrows(IOException.class, () -> snapshot(metadata));
+                rejects(IOException.class, () -> snapshot(metadata));
             } catch (UnsupportedOperationException | java.nio.file.FileSystemException unavailable) {
                 // Windows runner without symlink creation privileges.
             }
@@ -142,11 +141,31 @@ public class M3CargoBuildEvidenceTest {
                 original.cargoConfigSha256(), original.rustToolchainSha256(),
                 original.rustToolchainTomlSha256(), original.cargoMetadataSha256(),
                 original.metadataBytes(), original.configuredCargoCommandSha256());
-        assertThrows(IOException.class, () -> M3CargoBuildEvidence.writeSnapshot(
+        rejects(IOException.class, () -> M3CargoBuildEvidence.writeSnapshot(
                 other, root, Path.of("target/ide/cargo-build-facts.ide")));
-        assertThrows(IOException.class, () -> M3CargoBuildEvidence.writeSnapshot(
+        rejects(IOException.class, () -> M3CargoBuildEvidence.writeSnapshot(
                 original, root, Path.of("../foreign-build.ide")));
         assertArrayEquals(original.toExchangeBytes(), Files.readAllBytes(output));
+    }
+
+    @FunctionalInterface
+    private interface CheckedOperation { void run() throws Exception; }
+
+    /** The Tycho OSGi test bundle does not expose JUnit's Executable type. */
+    private static void rejects(Class<? extends Exception> expected, CheckedOperation operation)
+            throws Exception {
+        rejects(expected, operation, expected.getName());
+    }
+
+    private static void rejects(Class<? extends Exception> expected, CheckedOperation operation,
+            String message) throws Exception {
+        try {
+            operation.run();
+        } catch (Exception actual) {
+            if (expected.isInstance(actual)) return;
+            throw actual;
+        }
+        throw new AssertionError("Missing original Cargo owner failure: " + message);
     }
 
     private Path setup() throws IOException {
