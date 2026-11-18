@@ -47,7 +47,7 @@ import org.eclipse.core.runtime.OperationCanceledException;
  * or build skipping.</p>
  */
 public final class M3CargoBuildEvidence {
-    public static final String SCHEMA = "M3-CARGO-BUILD-FACTS-V1";
+    public static final String SCHEMA = "M3-CARGO-BUILD-FACTS-V1"; //$NON-NLS-1$
     private static final long MAX_DESCRIPTOR = 8L * 1024 * 1024;
     private static final long MAX_METADATA = 16L * 1024 * 1024;
     private static final Duration MAX_NATIVE_METADATA_TIME = Duration.ofSeconds(90);
@@ -63,7 +63,7 @@ public final class M3CargoBuildEvidence {
             project = valid(project, false);
             invocation = valid(invocation, false);
             if (!UUID.fromString(invocation).toString().equals(invocation)) {
-                throw new IllegalArgumentException("invalid Eclipse invocation UUID");
+                throw new IllegalArgumentException("invalid Eclipse invocation UUID"); //$NON-NLS-1$
             }
             eclipseSelected = valid(eclipseSelected, true);
             manifestSha256 = sha(manifestSha256, false);
@@ -74,25 +74,25 @@ public final class M3CargoBuildEvidence {
             cargoMetadataSha256 = sha(cargoMetadataSha256, false);
             configuredCargoCommandSha256 = sha(configuredCargoCommandSha256, false);
             if (metadataBytes < 1 || metadataBytes > MAX_METADATA) {
-                throw new IllegalArgumentException("invalid Cargo metadata byte budget");
+                throw new IllegalArgumentException("invalid Cargo metadata byte budget"); //$NON-NLS-1$
             }
         }
 
         /** Deterministic, canonical UTF-8/LF facts; no native Cargo JSON copied into JVM. */
         public byte[] toExchangeBytes() {
-            String out = SCHEMA + "\n"
-                    + "provider\teclipse.corrosion\n"
-                    + "project64\t" + b64(project) + "\n"
-                    + "invocation\t" + invocation + "\n"
-                    + "eclipseSelected64\t" + b64(eclipseSelected) + "\n"
-                    + "manifestSha256\t" + manifestSha256 + "\n"
-                    + "lockSha256\t" + lockSha256 + "\n"
-                    + "cargoConfigSha256\t" + cargoConfigSha256 + "\n"
-                    + "rustToolchainSha256\t" + rustToolchainSha256 + "\n"
-                    + "rustToolchainTomlSha256\t" + rustToolchainTomlSha256 + "\n"
-                    + "cargoMetadataSha256\t" + cargoMetadataSha256 + "\n"
-                    + "metadataBytes\t" + metadataBytes + "\n"
-                    + "cargoCommandSha256\t" + configuredCargoCommandSha256 + "\n";
+            String out = SCHEMA + "\n" //$NON-NLS-1$
+                    + "provider\teclipse.corrosion\n" //$NON-NLS-1$
+                    + "project64\t" + b64(project) + "\n" //$NON-NLS-1$ //$NON-NLS-2$
+                    + "invocation\t" + invocation + "\n" //$NON-NLS-1$ //$NON-NLS-2$
+                    + "eclipseSelected64\t" + b64(eclipseSelected) + "\n" //$NON-NLS-1$ //$NON-NLS-2$
+                    + "manifestSha256\t" + manifestSha256 + "\n" //$NON-NLS-1$ //$NON-NLS-2$
+                    + "lockSha256\t" + lockSha256 + "\n" //$NON-NLS-1$ //$NON-NLS-2$
+                    + "cargoConfigSha256\t" + cargoConfigSha256 + "\n" //$NON-NLS-1$ //$NON-NLS-2$
+                    + "rustToolchainSha256\t" + rustToolchainSha256 + "\n" //$NON-NLS-1$ //$NON-NLS-2$
+                    + "rustToolchainTomlSha256\t" + rustToolchainTomlSha256 + "\n" //$NON-NLS-1$ //$NON-NLS-2$
+                    + "cargoMetadataSha256\t" + cargoMetadataSha256 + "\n" //$NON-NLS-1$ //$NON-NLS-2$
+                    + "metadataBytes\t" + metadataBytes + "\n" //$NON-NLS-1$ //$NON-NLS-2$
+                    + "cargoCommandSha256\t" + configuredCargoCommandSha256 + "\n"; //$NON-NLS-1$ //$NON-NLS-2$
             return out.getBytes(StandardCharsets.UTF_8);
         }
 
@@ -107,25 +107,25 @@ public final class M3CargoBuildEvidence {
     public static Snapshot captureOfflineLocked(IProject project, String selected,
             String invocation, IProgressMonitor monitor)
             throws IOException, InterruptedException {
-        Objects.requireNonNull(project, "project");
+        Objects.requireNonNull(project, "project"); //$NON-NLS-1$
         if (project.getLocation() == null || !project.isAccessible()) {
-            throw new IOException("Corrosion Cargo project is not accessible");
+            throw new IOException("Corrosion Cargo project is not accessible"); //$NON-NLS-1$
         }
         String command = CargoTools.getCargoCommand();
         valid(command, false);
         Path root = project.getLocation().toFile().toPath().toRealPath();
-        requireDescriptor(root, "Cargo.toml", true);
-        requireDescriptor(root, "Cargo.lock", true);
+        requireDescriptor(root, "Cargo.toml", true); //$NON-NLS-1$
+        requireDescriptor(root, "Cargo.lock", true); //$NON-NLS-1$
         cancelled(monitor);
 
         // Capture output outside the project. This API is never invoked
         // implicitly by the Eclipse project configurator.
-        Path temporary = Files.createTempFile("m3-corrosion-cargo-metadata-", ".json");
-        Path errors = Files.createTempFile("m3-corrosion-cargo-stderr-", ".txt");
+        Path temporary = Files.createTempFile("m3-corrosion-cargo-metadata-", ".json"); //$NON-NLS-1$ //$NON-NLS-2$
+        Path errors = Files.createTempFile("m3-corrosion-cargo-stderr-", ".txt"); //$NON-NLS-1$ //$NON-NLS-2$
         Process process = null;
         try {
             ProcessBuilder builder = new ProcessBuilder(command,
-                    "metadata", "--format-version=1", "--locked", "--offline");
+                    "metadata", "--format-version=1", "--locked", "--offline"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             builder.directory(root.toFile());
             builder.redirectOutput(temporary.toFile());
             builder.redirectError(errors.toFile());
@@ -135,11 +135,11 @@ public final class M3CargoBuildEvidence {
                 cancelled(monitor);
                 if (process.waitFor(200, TimeUnit.MILLISECONDS)) break;
                 if (System.nanoTime() >= deadline) {
-                    throw new IOException("offline Cargo metadata exceeded its explicit time budget");
+                    throw new IOException("offline Cargo metadata exceeded its explicit time budget"); //$NON-NLS-1$
                 }
             }
             if (process.exitValue() != 0) {
-                throw new IOException("original offline/locked Cargo metadata command failed: exit "
+                throw new IOException("original offline/locked Cargo metadata command failed: exit " //$NON-NLS-1$
                         + process.exitValue());
             }
             cancelled(monitor);
@@ -163,21 +163,21 @@ public final class M3CargoBuildEvidence {
     public static Snapshot captureFromOriginalMetadata(Path root, String project,
             String eclipseSelected, String invocation, String cargoCommand,
             Path nativeMetadata, IProgressMonitor monitor) throws IOException {
-        Objects.requireNonNull(root, "root");
+        Objects.requireNonNull(root, "root"); //$NON-NLS-1$
         project = valid(project, false);
         eclipseSelected = valid(eclipseSelected, true);
         cargoCommand = valid(cargoCommand, false);
         cancelled(monitor);
         Path directory = root.toAbsolutePath().normalize();
         if (!Files.isDirectory(directory, LinkOption.NOFOLLOW_LINKS)) {
-            throw new IOException("Cargo project root is not a regular directory");
+            throw new IOException("Cargo project root is not a regular directory"); //$NON-NLS-1$
         }
-        String manifest = requireDescriptor(directory, "Cargo.toml", true);
-        String lock = requireDescriptor(directory, "Cargo.lock", true);
-        String config = requireDescriptor(directory, ".cargo/config.toml", false);
-        String toolchain = requireDescriptor(directory, "rust-toolchain", false);
-        String toolchainToml = requireDescriptor(directory, "rust-toolchain.toml", false);
-        HashStat metadata = hashFile(Objects.requireNonNull(nativeMetadata, "nativeMetadata"),
+        String manifest = requireDescriptor(directory, "Cargo.toml", true); //$NON-NLS-1$
+        String lock = requireDescriptor(directory, "Cargo.lock", true); //$NON-NLS-1$
+        String config = requireDescriptor(directory, ".cargo/config.toml", false); //$NON-NLS-1$
+        String toolchain = requireDescriptor(directory, "rust-toolchain", false); //$NON-NLS-1$
+        String toolchainToml = requireDescriptor(directory, "rust-toolchain.toml", false); //$NON-NLS-1$
+        HashStat metadata = hashFile(Objects.requireNonNull(nativeMetadata, "nativeMetadata"), //$NON-NLS-1$
                 MAX_METADATA, true);
         cancelled(monitor);
         return new Snapshot(project, invocation, eclipseSelected, manifest, lock, config,
@@ -188,27 +188,27 @@ public final class M3CargoBuildEvidence {
     /** Explicit non-overwriting project-local export for an approved invocation. */
     public static Path writeSnapshot(Snapshot facts, Path projectRoot, Path destination)
             throws IOException {
-        Objects.requireNonNull(facts, "facts");
-        Path root = Objects.requireNonNull(projectRoot, "projectRoot").toRealPath();
-        Path requested = Objects.requireNonNull(destination, "destination");
+        Objects.requireNonNull(facts, "facts"); //$NON-NLS-1$
+        Path root = Objects.requireNonNull(projectRoot, "projectRoot").toRealPath(); //$NON-NLS-1$
+        Path requested = Objects.requireNonNull(destination, "destination"); //$NON-NLS-1$
         Path file = (requested.isAbsolute() ? requested : root.resolve(requested)).normalize();
         if (!file.startsWith(root) || file.equals(root)) {
-            throw new IOException("Cargo facts destination must be inside the source project");
+            throw new IOException("Cargo facts destination must be inside the source project"); //$NON-NLS-1$
         }
         for (Path cursor = file; cursor != null && cursor.startsWith(root); cursor = cursor.getParent()) {
             if (Files.isSymbolicLink(cursor)) {
-                throw new IOException("Cargo facts destination contains a symbolic link");
+                throw new IOException("Cargo facts destination contains a symbolic link"); //$NON-NLS-1$
             }
         }
         if (!Files.isDirectory(file.getParent(), LinkOption.NOFOLLOW_LINKS)) {
-            throw new IOException("Cargo facts destination parent does not exist");
+            throw new IOException("Cargo facts destination parent does not exist"); //$NON-NLS-1$
         }
         byte[] original = facts.toExchangeBytes();
         if (Files.exists(file, LinkOption.NOFOLLOW_LINKS)) {
             if (!Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)
                     || Files.size(file) != original.length
                     || !java.util.Arrays.equals(Files.readAllBytes(file), original)) {
-                throw new IOException("refusing to overwrite conflicting Cargo facts generation");
+                throw new IOException("refusing to overwrite conflicting Cargo facts generation"); //$NON-NLS-1$
             }
             return file;
         }
@@ -222,28 +222,28 @@ public final class M3CargoBuildEvidence {
     private static String requireDescriptor(Path root, String relative, boolean required)
             throws IOException {
         Path file = root.resolve(relative).normalize();
-        if (!file.startsWith(root)) throw new IOException("Cargo descriptor outside project");
+        if (!file.startsWith(root)) throw new IOException("Cargo descriptor outside project"); //$NON-NLS-1$
         for (Path cursor = file.getParent(); cursor != null && cursor.startsWith(root);
                 cursor = cursor.getParent()) {
             if (Files.isSymbolicLink(cursor)) {
-                throw new IOException("Cargo descriptor parent symlink: " + relative);
+                throw new IOException("Cargo descriptor parent symlink: " + relative); //$NON-NLS-1$
             }
         }
         HashStat hash = hashFile(file, MAX_DESCRIPTOR, required);
-        return hash == null ? "absent" : hash.sha256();
+        return hash == null ? "absent" : hash.sha256(); //$NON-NLS-1$
     }
 
     private static HashStat hashFile(Path path, long limit, boolean required) throws IOException {
         if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
             if (!required) return null;
-            throw new IOException("missing original Cargo input: " + path);
+            throw new IOException("missing original Cargo input: " + path); //$NON-NLS-1$
         }
         if (!Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) {
-            throw new IOException("original Cargo input is not a regular file: " + path);
+            throw new IOException("original Cargo input is not a regular file: " + path); //$NON-NLS-1$
         }
         long size = Files.size(path);
         if (size > limit || (required && size == 0)) {
-            throw new IOException("original Cargo input outside byte budget: " + path);
+            throw new IOException("original Cargo input outside byte budget: " + path); //$NON-NLS-1$
         }
         MessageDigest sha = digest();
         byte[] buffer = new byte[65536];
@@ -252,39 +252,39 @@ public final class M3CargoBuildEvidence {
             for (int bytes; (bytes = input.read(buffer)) != -1; ) {
                 count += bytes;
                 if (count > limit) {
-                    throw new IOException("original Cargo input changed beyond byte budget");
+                    throw new IOException("original Cargo input changed beyond byte budget"); //$NON-NLS-1$
                 }
                 sha.update(buffer, 0, bytes);
             }
         }
         if (count != size || Files.size(path) != count) {
-            throw new IOException("original Cargo file length changed during capture");
+            throw new IOException("original Cargo file length changed during capture"); //$NON-NLS-1$
         }
         return new HashStat(HexFormat.of().formatHex(sha.digest()), count);
     }
 
     private static String sha(String value, boolean optional) {
-        if (optional && "absent".equals(value)) return value;
-        if (value == null || !value.matches("[0-9a-f]{64}")) {
-            throw new IllegalArgumentException("noncanonical original Cargo SHA-256");
+        if (optional && "absent".equals(value)) return value; //$NON-NLS-1$
+        if (value == null || !value.matches("[0-9a-f]{64}")) { //$NON-NLS-1$
+            throw new IllegalArgumentException("noncanonical original Cargo SHA-256"); //$NON-NLS-1$
         }
         return value;
     }
 
     private static String valid(String text, boolean empty) {
-        Objects.requireNonNull(text, "original Cargo identity");
+        Objects.requireNonNull(text, "original Cargo identity"); //$NON-NLS-1$
         if ((!empty && text.isBlank()) || text.length() > 4096
                 || text.chars().anyMatch(Character::isISOControl)) {
-            throw new IllegalArgumentException("invalid Cargo identity");
+            throw new IllegalArgumentException("invalid Cargo identity"); //$NON-NLS-1$
         }
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
             if (Character.isHighSurrogate(c)) {
                 if (++i >= text.length() || !Character.isLowSurrogate(text.charAt(i))) {
-                    throw new IllegalArgumentException("invalid original Cargo Unicode");
+                    throw new IllegalArgumentException("invalid original Cargo Unicode"); //$NON-NLS-1$
                 }
             } else if (Character.isLowSurrogate(c)) {
-                throw new IllegalArgumentException("invalid original Cargo Unicode");
+                throw new IllegalArgumentException("invalid original Cargo Unicode"); //$NON-NLS-1$
             }
         }
         return text;
@@ -297,9 +297,9 @@ public final class M3CargoBuildEvidence {
 
     private static MessageDigest digest() {
         try {
-            return MessageDigest.getInstance("SHA-256");
+            return MessageDigest.getInstance("SHA-256"); //$NON-NLS-1$
         } catch (NoSuchAlgorithmException impossible) {
-            throw new IllegalStateException("SHA-256 unavailable", impossible);
+            throw new IllegalStateException("SHA-256 unavailable", impossible); //$NON-NLS-1$
         }
     }
 
