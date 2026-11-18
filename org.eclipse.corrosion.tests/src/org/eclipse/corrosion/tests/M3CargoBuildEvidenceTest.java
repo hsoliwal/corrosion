@@ -20,17 +20,35 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.corrosion.cargo.core.M3CargoBuildEvidence;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
 /** Rust build evidence is owned by native Cargo, never by a Maven/Gradle parser. */
 public class M3CargoBuildEvidenceTest {
     private static final String UUID = "9ab5cc33-33bd-4f33-8aa9-6c3c11223344";
-    @TempDir Path root;
+    private Path root;
+
+    @BeforeEach
+    public void createTemporaryCargoProject() throws IOException {
+        root = Files.createTempDirectory("m3-corrosion-cargo-tests-");
+    }
+
+    @AfterEach
+    public void deleteTemporaryCargoProject() throws IOException {
+        if (root != null && Files.exists(root)) {
+            try (var files = Files.walk(root)) {
+                for (Path file : files.sorted(Comparator.reverseOrder()).toList()) {
+                    Files.deleteIfExists(file);
+                }
+            }
+        }
+    }
 
     @Test
     public void offlineLockedCargoSourceFactsAreStableAndByteSensitive() throws Exception {
