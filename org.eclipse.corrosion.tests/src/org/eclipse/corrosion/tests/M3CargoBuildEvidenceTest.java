@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
 
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -91,6 +90,20 @@ public class M3CargoBuildEvidenceTest {
             }
         } finally {
             Files.deleteIfExists(outside);
+        }
+    }
+
+    @Test
+    public void originalCargoProducerBytesMatchPortableMavenDecoderFixture() throws Exception {
+        var packet = new M3CargoBuildEvidence.Snapshot(
+                "cargo-fixture", UUID, "Debug",
+                "a".repeat(64), "b".repeat(64), "absent", "absent", "absent",
+                "c".repeat(64), 1234, "d".repeat(64));
+        try (var data = M3CargoBuildEvidenceTest.class.getResourceAsStream(
+                "/projects/m3-cargo-build-facts-v1.fixture")) {
+            if (data == null) throw new IOException("missing Corrosion/Maven protocol fixture");
+            assertArrayEquals(data.readAllBytes(), packet.toExchangeBytes(),
+                    "Corrosion/Cargo source-owned bytes must match the independent Maven reader");
         }
     }
 
